@@ -1,3 +1,5 @@
+from main import *
+
 """Dicionario de portais com proxy para uso:"""
 portal_entrada = {
         "Portal 1": "proxy.idtbrasilhosted.com",

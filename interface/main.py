@@ -23,56 +23,113 @@ lb_top = ttk.Label(app,
 )
 lb_top.grid(row=0, column=0)
 
+"""Variaveis check, interface"""
 
+"""Dicionario de portais com proxy para uso:"""
+portal_entrada = {
+        "Portal 1": "proxy.idtbrasilhosted.com",
+        "Portal 2": "proxy2.idtbrasilhosted.com",
+        "Portal 3": "proxy3.idtbrasilhosted.com",
+        "Portal 4": "proxy4.idtbrasilhosted.com",
+        "Portal 5": "proxy5.idtbrasilhosted.com",
+        "Portal 6": "proxy6.idtbrasilhosted.com",
+        "Portal 7": "proxy7.idtbrasilhosted.com",
+        "Portal 8": "proxy8.idtbrasilhosted.com",
+        "Portal 9": "proxy9.idtbrasilhosted.com",
+        "Portal 10": "proxy10.idtbrasilhosted.com",
+        "Portal 11": "proxy11.idtbrasilhosted.com",
+        "Portal 12": "proxy12.idtbrasilhosted.com",
+    }
+
+"""Variaveis combobox"""
+portais = (["Portal 1", "Portal 2", "Portal 3", "Portal 4", "Portal 5", "Portal 6", 
+                "Portal 7", "Portal 8", "Portal 9", "Portal 10", "Portal 11", "Portal 12"])
+
+# resp_1 = ()
+# resp_2 = () 
+# resp_3 = ()
+# resp_4 = ()
 
 def op_check1(event):
-    resp = ccb.get()
-    resp_portal = portal_entrada[resp]
+    resp_1 = ccb.get()
+    resp_portal = portal_entrada[resp_1]
     lb2['text'] = resp_portal
-    resp1 = valor_check1.get()
-    resp2 = valor_check2.get()
-    resp3 = valor_check3.get()
 
-    if resp in portais:
+    return resp_1
+
+def op_check2():
+    resp1 = valor_check1.get()
+    resp_2 = resp1
+    resp2 = valor_check2.get()
+    resp_3 = resp2
+    resp3 = valor_check3.get()
+    resp_4 = resp3
+
+    return resp_2, resp_3, resp_4
+
+# p = ()
+# t = ()
+# d = ()
+# s = ()
+
+
+def resp():
+    resp_1 = op_check1(ccb.get())
+    resp_2, resp_3, resp_4 = op_check2()
+
+    if resp_1 in portais:
         p = True
+        
+    
     else:
         p = False
-    
-    if resp1 == 1:
-        t = True
+        
+
+    if resp_2 == 1:
+        t1 = True
+        t = t1
     else:
         t = False
+        
 
-    if resp2 == 1:
+    if resp_3 == 1:
         d = True
+        
     else:
         d = False
+        
 
-    if resp3 == 1:
+    if resp_4 == 1:
         s = True
+        
     else:
         s = False
-
+        
     
-        if p and t == True:
-            
-            ping_portal(resp_portal)
-            tracert(resp_portal)
-        else:
-            print('Error')
+    return p, t, d, s
 
-        if p and d == True:
-            
-            ping_dns()
-        else:
-            print('Error')
+def next(str = "bt1S"):
 
-        if s == True:
+    p, t, d, s = resp()
+    resp_1 = op_check1(ccb.get())
 
-            sip_alg()
-        else:
-            print('Error')
+    if p and t == True:
+        bt1['text'] = 'S-Ping'
+        print("Conluido")
+    else:
+        print(p, t)
 
+    if p and d == True:
+        bt1['text'] = 'S-DNS'
+        ping_dns()
+    else:
+        print(p, d)
+
+    if s == True:
+
+        print(s)
+    else:
+        print(s)
 
 nb = ttk.Notebook(app)
 nb.grid(row=1, column=0)
@@ -106,24 +163,23 @@ lb3.grid(row=1, column=0)
 valor_check1 = IntVar()
 check1 = ttk.Checkbutton(frame1, text="TRACERT",
     variable=valor_check1,
-    command = op_check1)
+    command = op_check2)
 check1.grid(row=1, column=1)
 
 valor_check2 = IntVar()
 check2 = ttk.Checkbutton(frame1, text="DNS",
     variable=valor_check2,
-    command = op_check1)
+    command = op_check2)
 check2.grid(row=1, column=2)
 
 valor_check3 = IntVar()
 check3 = ttk.Checkbutton(frame1, text="SIP ALG",
     variable=valor_check3,
-    command = op_check1)
+    command = op_check2)
 check3.grid(row=1, column=3)
 
-bt1 = ttk.Button(frame1, text='Execultar')
+bt1 = ttk.Button(frame1, text='Execultar', command= lambda: next("bt1s"))
 bt1.grid(row=3, column=0)
-bt1['command']
 
 
 app.tk.mainloop()
