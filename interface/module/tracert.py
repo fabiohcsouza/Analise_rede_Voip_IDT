@@ -1,9 +1,17 @@
 from icmplib import traceroute
 
-def tracert(portal):
-    hops = traceroute(portal)
+def tracert():
+    hops = traceroute("8.8.8.8")
 
+    # saida(hops)
+
+    print(hops)
+
+    new_func(hops)
+
+def new_func(hops):
     print('Distance/TTL    Address    Average round-trip time')
+
     last_distance = 0
 
     for hop in hops:
@@ -14,4 +22,6 @@ def tracert(portal):
         print(f'{hop.distance}    {hop.address}    {hop.avg_rtt} ms')
 
         last_distance = hop.distance
-    print(hops)
+
+
+
