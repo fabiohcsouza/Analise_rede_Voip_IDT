@@ -114,13 +114,13 @@ import threading
 def sip_alg():
     os.startfile("program\sip-alg-detector.exe")
 
-def ping_IP_2(IP, tm, name):
+def ping_IP(IP, tm, name, local_a):
     
     #VARIAVEIS
     address_portal = IP
     interval_qt = 0.1
     nome = name
-    local = fra4
+    local = local_a
 
     #SISTEMA
     host1 = ping(address_portal, count=tm, interval=interval_qt)
@@ -152,119 +152,6 @@ def ping_IP_2(IP, tm, name):
     
     matplot(name, saida_y, saida_x, e, d, local)
 
-def ping_IP(IP, tm, name):
-    
-    #VARIAVEIS
-    address_portal = IP
-    interval_qt = 0.1
-    nome = name
-    local = fra3
-
-    #SISTEMA
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    #MANPULANDO SAIDA
-    valor1 = host1.rtts
-    max = host1.max_rtt
-    min = host1.min_rtt
-    
-    d = int('{:.0f}'.format(max+5))
-    e = int('{:.0f}'.format(min-5))
-
-    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
-    saida_y = []
-    for ms in valor1:
-        saida_y.append(int('{:.0f}'.format(ms)))
-
-    saida_x = []
-    tam_s = len(saida_y)
-    x2 = tam_s + 1
-    xx = range(1, x2)
-    for n in xx:
-        saida_x.append(n)
-
-    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
-    text_area.insert(tk.INSERT, host1)
-    
-    #INICIANDO MATPLOT COM DADOS DA SAIDA
-    
-    matplot(name, saida_y, saida_x, e, d, local)
-
-def ping_DNS(tm, name):
-    
-    #VARIAVEIS
-    address_portal = '8.8.8.8'
-    interval_qt = 0.1
-    nome = name
-    local = fra2
-
-    #SISTEMA
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    #MANPULANDO SAIDA
-    valor1 = host1.rtts
-    max = host1.max_rtt
-    min = host1.min_rtt
-    
-    d = int('{:.0f}'.format(max+5))
-    e = int('{:.0f}'.format(min-5))
-
-    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
-    saida_y = []
-    for ms in valor1:
-        saida_y.append(int('{:.0f}'.format(ms)))
-
-    saida_x = []
-    tam_s = len(saida_y)
-    x2 = tam_s + 1
-    xx = range(1, x2)
-    for n in xx:
-        saida_x.append(n)
-
-    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
-    text_area.insert(tk.INSERT, host1)
-    
-    #INICIANDO MATPLOT COM DADOS DA SAIDA
-    
-    matplot(name, saida_y, saida_x, e, d, local)
-
-def ping_portal(portal, tm, name):
-    
-    #VARIAVEIS
-    address_portal = portal
-    interval_qt = 0.1
-    nome = name
-    local = fra1
-
-    #SISTEMA
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    #MANPULANDO SAIDA
-    valor1 = host1.rtts
-    max = host1.max_rtt
-    min = host1.min_rtt
-    
-    d = int('{:.0f}'.format(max+5))
-    e = int('{:.0f}'.format(min-5))
-
-    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
-    saida_y = []
-    for ms in valor1:
-        saida_y.append(int('{:.0f}'.format(ms)))
-
-    saida_x = []
-    tam_s = len(saida_y)
-    x2 = tam_s + 1
-    xx = range(1, x2)
-    for n in xx:
-        saida_x.append(n)
-
-    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
-    text_area.insert(tk.INSERT, host1)
-    
-    #INICIANDO MATPLOT COM DADOS DA SAIDA
-    
-    matplot(name, saida_y, saida_x, e, d, local )
 
 def matplot(name, saida_y, saida_x, tam_min, tam_max, local):
     #name, saida_y, saida_x, tam_min, tam_max = ping_portal()
@@ -304,8 +191,6 @@ def matplot(name, saida_y, saida_x, tam_min, tam_max, local):
 
 """FUNÇÕES INTERFACE"""
 
-
-
 def popupmsg(msg):
     popup = tk.Tk()
     popup.wm_title("!")
@@ -323,156 +208,69 @@ def op_check1(event): #Essa função armazena os valores var do widget ccb.
 
     return resp_1, resp_portal
 
-def op_check2(c): #Essa função armazena os valores var do widget checkbox.
-
+def op_check2(c): #Essa função armazena os valores var do widget checkbox
     resp1 = valor_check1.get()
-    #resp1 = resp_1
     resp2 = valor_check2.get()
-    #resp2 = resp_2
-    resp3 = valor_check3.get()
-    #resp3 = resp_3
     resp4 = int(len1.get())
-    #resp4 = int(resp_4)
-    resp5 = len2.get()
-    #resp5 = resp_5
-    resp6 = len3.get()
-    #resp6 = resp_6
-
-    #PING PORTAL + DNS + PING IP
-    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp2 == 1:
-            next(10)
-    
-    #PING PORTAL + PING IP
-    if resp6 != 0 and resp_1 in portais and resp5 and resp4 != 0 and c == "SIM":
-            next(8)
-    
-    #PING PORTAL + TRACERT + PING IP
-    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 == 1:
-            next(9)
-    
-    #PING PORTAL + SIP ALG + PING IP
-    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp3 == 1:
-            next(11)
-    
-    #PING PORTAL + TRACERT + DNS + PING IP
-    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 and resp2 == 1:
-            next(12)
-    
-    #PING PORTAL + TRACERT + SIP ALG + PING IP
-    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 and resp3 == 1:
-            next(13)
-   
-        #PING PORTAL + TRACERT
-    if resp_1 in portais and resp4 > 0 and c == "SIM"  and resp1 == 1:
-            next(2)
-    
-    #PING PORTAL + DNS
-    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp2 == 1:
-            next(3)
-   
-    #PING PORTAL + SIP ALG
-    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp3 == 1:
-            next(4)
-
-    #PING COM TODAS OP
-    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 and resp2 and resp3 == 1:
-            next(14)
-    
-        #PING PORTAL + TRACERT + DNS
-    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp1 and resp2 == 1:
-            next(5)
-   
-    #PING PORTAL + TRACERT + SIP ALG
-    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp1 and resp3 == 1:
-            next(6)
-    
-    #PING COM TODAS OP
-    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp1 and resp2 and resp3 == 1:
-            next(7)
+    resp3 = valor_check3.get()
+    resp5 = bool(len2.get())
+    resp6 = bool(len3.get())
     
     #PING PORTAL
-    if resp_1 in portais and resp4 > 0 and c == "SIM":
-            next(1)
+    if resp_1 in portais and c == "SIM" and resp4 > 0:
+        next(1)
+    #TRACERT
+    if resp1 ==1 and c == "SIM":
+        next(2)
+    #DNS
+    if resp2 == 1 and c == "SIM"  and resp4 > 0:
+        next(3) 
+    #SIP ALG
+    if resp3 == 1 and c == "SIM":
+        next(4)
+    #PING IP GATEWAY
+    if resp5 == True and c == "SIM"  and resp4 > 0:
+        next(5)
+        print(resp5)
+    #PING IP HOST
+    if resp6 == True and c == "SIM" and resp4 > 0:
+        next(6)
     
-
 def next(num: int): #Essa função execulta os comando, vinculada ao botao execultar. 
     resp_1 = ccb.get()
     resp4 = int(len1.get())
     resp5 = len2.get()
     resp6 = len3.get()
 
-    if num == 1 : 
-        ping_portal(resp_portal, resp4, resp_1)
-    elif num == 2:
-        ping_portal(resp_portal, resp4, resp_1)
+    if num == 1: 
+        text_area.insert(tk.INSERT, 'Iniciando Ping Portal... \n')
+        time.sleep(3)
+        threading.Thread(target=ping_IP(resp_portal, resp4, resp_1, fra1)).start()
+    if num == 2:
+        text_area.insert(tk.INSERT, 'Iniciando Tracert para portal...')
+        time.sleep(3)
         print('tracert não pronto')
-    elif num == 3:
-        text_area.insert(tk.INSERT, 'Iniciando coleta...')
-        threading.Thread(target=ping_portal(resp_portal, resp4, resp_1)).start()
-        threading.Thread(target=ping_DNS(resp4 ,'DNS Google')).start()
+    if num == 3:
+        text_area.insert(tk.INSERT, 'Iniciando Ping DNS Google...')
+        time.sleep(3)
+        threading.Thread(target=ping_IP('8.8.8.8',resp4 ,'DNS Google', fra2)).start()
+    if num == 4:
+        text_area.insert(tk.INSERT, 'Iniciando Sip Alg...')
+        time.sleep(3)
+        threading.Thread(target=sip_alg()).start()
+    if num == 5:
+        text_area.insert(tk.INSERT, 'Iniciando Ping Gateway...')
+        time.sleep(3)
+        threading.Thread(target=ping_IP(resp6, resp4, 'GATEWAY', fra3)).start()
+    if num == 6:
+        text_area.insert(tk.INSERT, 'Iniciando Ping Host...')
+        time.sleep(3)
+        threading.Thread(target=ping_IP(resp5, resp4, 'HOST', fra4)).start()
 
-    elif num == 4:
-        ping_portal(resp_portal, resp4, resp_1)
-        sip_alg()
-    elif num == 5:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_DNS(resp4 ,'DNS Google')
-        print('tracert não pronto')
-    elif num == 6:
-        print('tracert não pronto')
-        sip_alg()
-    elif num == 7:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_DNS(resp4 ,'DNS Google')
-        print('tracert não pronto')
-        sip_alg()
-    elif num == 8:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
-    elif num == 9:
-        ping_portal(resp_portal, resp4, resp_1)
-        print('tracert não pronto')
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
-    elif num == 10:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_DNS(resp4 ,'DNS Google')
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
-    elif num == 11:
-        ping_portal(resp_portal, resp4, resp_1)
-        sip_alg()
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
-    elif num == 12:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_DNS(resp4 ,'DNS Google')
-        print('tracert não pronto')
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
-    elif num == 13:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_DNS(resp4 ,'DNS Google')
-        sip_alg()
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
-    elif num == 14:
-        ping_portal(resp_portal, resp4, resp_1)
-        ping_DNS(resp4 ,'DNS Google')
-        print('tracert não pronto')
-        sip_alg()
-        ping_IP(resp5, resp4, 'HOST')
-        ping_IP_2(resp6, resp4, 'GATEWAY')
     
 def pular_l(r1, c0): #Essa função cria uma label
     lv1 = ttk.Label(frame1)
     lv1.grid(row= r1, column= c0)
-
-
-"""FIGURA"""
-
-
 
 """INICIO ROW 1"""
 pular_l(0, 0)
@@ -505,7 +303,7 @@ pular_l(2,0)
 lb9 = ttk.Label(frame1, text=('• Tempo de execução'), justify=LEFT)
 len1_var = tk.IntVar
 len1 = ttk.Entry(frame1, textvariable=len1_var)
-lb10 = ttk.Label(frame1, text=('Ex. 1000 = 1 hora'))
+lb10 = ttk.Label(frame1, text=('Ex. 3800 = 1 hora'))
 
 lb9.grid(row=3, column=0)
 len1.grid(row=3, column=1)

@@ -1,90 +1,149 @@
-"""FUNÇÕES SISTEMA"""
+def op_check1(event): #Essa função armazena os valores var do widget ccb.
+    global resp_1, resp_portal
+    resp_1 = ccb.get()
+    resp_portal = portal_entrada[resp_1]
+    lb2['text'] = "-", resp_portal
 
-from  icmplib  import  ping
-import matplotlib.pyplot as grafico
-import numpy as np
+    return resp_1, resp_portal
 
+def op_check2(c): #Essa função armazena os valores var do widget checkbox.
 
-def ping_IP(IP, tm, name):
+    resp1 = valor_check1.get()
+    #resp1 = resp_1
+    resp2 = valor_check2.get()
+    #resp2 = resp_2
+    resp3 = valor_check3.get()
+    #resp3 = resp_3
+    resp4 = int(len1.get())
+    #resp4 = int(resp_4)
+    resp5 = len2.get()
+    #resp5 = resp_5
+    resp6 = len3.get()
+    #resp6 = resp_6
+
+    #PING PORTAL + DNS + PING IP
+    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp2 == 1:
+            next(10)
     
-    #VARIAVEIS
-    address_portal = IP
-    interval_qt = 0.1
-    nome = name
-
-    #SISTEMA
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    #MANPULANDO SAIDA
-    valor1 = host1.rtts
-    max = host1.max_rtt
-    min = host1.min_rtt
+    #PING PORTAL + PING IP
+    if resp6 != 0 and resp_1 in portais and resp5 and resp4 != 0 and c == "SIM":
+            next(8)
     
-    d = int('{:.0f}'.format(max+5))
-    e = int('{:.0f}'.format(min-5))
-
-    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
-    saida_y = []
-    for ms in valor1:
-        saida_y.append(int('{:.0f}'.format(ms)))
-
-    saida_x = []
-    tam_s = len(saida_y)
-    x2 = tam_s + 1
-    xx = range(1, x2)
-    for n in xx:
-        saida_x.append(n)
-
-    arquivo = open('/log/ping_portal.log')
-    for item in saida_y:
-        
-
-
-    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
-    #text_area.insert(tk.INSERT, host1)
+    #PING PORTAL + TRACERT + PING IP
+    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 == 1:
+            next(9)
     
-    #INICIANDO MATPLOT COM DADOS DA SAIDA
+    #PING PORTAL + SIP ALG + PING IP
+    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp3 == 1:
+            next(11)
     
-    matplot(name, saida_y, saida_x, e, d)
-
-
-def matplot(name, saida_y, saida_x, tam_min, tam_max):
-
-    #name, saida_y, saida_x, tam_min, tam_max = ping_portal()
+    #PING PORTAL + TRACERT + DNS + PING IP
+    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 and resp2 == 1:
+            next(12)
     
-    #VARIAVEIS
-    nome = name
-    y = saida_y
-    x = saida_x
-    tamMin = tam_min
-    tamMax = tam_max
+    #PING PORTAL + TRACERT + SIP ALG + PING IP
+    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 and resp3 == 1:
+            next(13)
+   
+        #PING PORTAL + TRACERT
+    if resp_1 in portais and resp4 > 0 and c == "SIM"  and resp1 == 1:
+            next(2)
+    
+    #PING PORTAL + DNS
+    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp2 == 1:
+            next(3)
+   
+    #PING PORTAL + SIP ALG
+    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp3 == 1:
+            next(4)
 
-    #add x and y labels 
-    grafico.xlabel('Tempo/Quantidade')
-    grafico.ylabel('Tempo/ms')
+    #PING COM TODAS OP
+    if resp_1 in portais and resp4 and resp5 and resp6 != 0 and c == "SIM" and resp1 and resp2 and resp3 == 1:
+            next(14)
+    
+        #PING PORTAL + TRACERT + DNS
+    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp1 and resp2 == 1:
+            next(5)
+   
+    #PING PORTAL + TRACERT + SIP ALG
+    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp1 and resp3 == 1:
+            next(6)
+    
+    #PING COM TODAS OP
+    if resp_1 in portais and resp4 > 0 and c == "SIM" and resp1 and resp2 and resp3 == 1:
+            next(7)
+    
+    #PING PORTAL
+    if resp_1 in portais and resp4 > 0 and c == "SIM":
+            next(1)
+    
 
-    #Axes range
-    grafico.axis(ymin=tamMin,ymax=tamMax)
+def next(num: int): #Essa função execulta os comando, vinculada ao botao execultar. 
+    resp_1 = ccb.get()
+    resp4 = int(len1.get())
+    resp5 = len2.get()
+    resp6 = len3.get()
 
-    #add title
-    grafico.title('Relatorio PING')
-    #plot
-    #grafico.plot(x, y, label=nome, marker='o')
-    grafico.bar(x, y, label=nome)
-    grafico.legend()
-    grafico.grid(False)
+    if num == 1 : 
+        ping_portal(resp_portal, resp4, resp_1)
+    elif num == 2:
+        ping_portal(resp_portal, resp4, resp_1)
+        print('tracert não pronto')
+    elif num == 3:
+        text_area.insert(tk.INSERT, 'Iniciando coleta...')
+        threading.Thread(target=ping_portal(resp_portal, resp4, resp_1)).start()
+        threading.Thread(target=ping_DNS(resp4 ,'DNS Google')).start()
 
-    # print(nome)
-    # linha()
-    # print(x)
-    # linha()
-    # print(y)
-    # linha()
-    # print(tamMin, tamMax)
-
-    #show plot
-    grafico.show()
-
-
-
-
+    elif num == 4:
+        ping_portal(resp_portal, resp4, resp_1)
+        sip_alg()
+    elif num == 5:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_DNS(resp4 ,'DNS Google')
+        print('tracert não pronto')
+    elif num == 6:
+        print('tracert não pronto')
+        sip_alg()
+    elif num == 7:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_DNS(resp4 ,'DNS Google')
+        print('tracert não pronto')
+        sip_alg()
+    elif num == 8:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
+    elif num == 9:
+        ping_portal(resp_portal, resp4, resp_1)
+        print('tracert não pronto')
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
+    elif num == 10:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_DNS(resp4 ,'DNS Google')
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
+    elif num == 11:
+        ping_portal(resp_portal, resp4, resp_1)
+        sip_alg()
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
+    elif num == 12:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_DNS(resp4 ,'DNS Google')
+        print('tracert não pronto')
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
+    elif num == 13:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_DNS(resp4 ,'DNS Google')
+        sip_alg()
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
+    elif num == 14:
+        ping_portal(resp_portal, resp4, resp_1)
+        ping_DNS(resp4 ,'DNS Google')
+        print('tracert não pronto')
+        sip_alg()
+        ping_IP(resp5, resp4, 'HOST')
+        ping_IP_2(resp6, resp4, 'GATEWAY')
