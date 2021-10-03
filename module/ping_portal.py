@@ -1,107 +1,67 @@
-#from module.matplotlib import controle
+
+from time import sleep
+
+from icmplib import ICMPv4Socket, ICMPv6Socket, ICMPRequest
+from icmplib import ICMPLibError, ICMPError, TimeoutExceeded
+from icmplib import PID, is_ipv6_address
 
 
+def verbose_ping(address, count=30, interval=1, timeout=2, id=PID):
+    # A payload of 56 bytes is used by default. You can modify it using
+    # the 'payload_size' parameter of your ICMP request.
+    print(f'PING {address}: 56 data bytes\n')
+
+    # We detect the socket to use from the specified IP address
+    if is_ipv6_address(address):
+        sock = ICMPv6Socket()
+    else:
+        sock = ICMPv4Socket()
+
+    for sequence in range(count):
+        # We create an ICMP request
+        request = ICMPRequest(
+            destination=address,
+            id=id,
+            sequence=sequence)
+
+        try:
+            # We send the request
+            sock.send(request)
+
+            # We are awaiting receipt of an ICMP reply
+            reply = sock.receive(request, timeout)
+
+            # We received a reply
+            # We display some information
+            print(f'  {reply.bytes_received} bytes from '
+                  f'{reply.source}: ', end='')
+
+            # We throw an exception if it is an ICMP error message
+            reply.raise_for_status()
+
+            # We calculate the round-trip time and we display it
+            round_trip_time = (reply.time - request.time) * 1000
+
+            print(f'icmp_seq={sequence} '
+                  f'time={round(round_trip_time, 3)} ms')
+
+            # We wait before continuing
+            if sequence < count - 1:
+                sleep(interval)
+
+        except TimeoutExceeded:
+            # The timeout has been reached
+            print(f'  Request timeout for icmp_seq {sequence}')
+
+        except ICMPError as err:
+            # An ICMP error message has been received
+            print(err)
+
+        except ICMPLibError:
+            # All other errors
+            print('  An error has occurred.')
+
+    print('\nCompleted.')
 
 
-"""FUNÇÕES SISTEMA"""
-
-from  icmplib  import  ping
-import matplotlib.pyplot as grafico
-
-
-def ping_portal(portal, tm):
-    address_portal = portal
-    interval_qt = 0.1
-
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    # with open('log\ping\ping_portal_result.log', 'w') as f:
-    #     f.write(host1)
-
-    valor1 = host1.rtts
-    # min = host1.min_rtt
-    max = host1.max_rtt
-    a = ['{:.0f}'.format(i) for i in valor1]
-    d = int('{:.0f}'.format(max))
-
-    a_sort = list(range(1,41))
-
-    #text_area.insert(tk.INSERT, host1)
-    print(host1)
-
-    print('Valores ping: {} '.format(a))
-
-    print(a_sort)
-
-    return a, a_sort, d
-
-
-def ping_dns(tm):
-
-    address_portal = "8.8.8.8"
-    interval_qt = 0.2
-
-    host2 = ping(address_portal, count=tm, interval=interval_qt)
-
-    # with open('log\ping\ping_dns_result.log', 'w') as f:
-    #     for a in host2:
-    #         f.write('{:.0f}'.format((a)))
-
-    valor2 = host2.rtts
-    a = ['{:.0f}'.format(i) for i in valor2]
-    a_sort = a.sort()
-
-    #text_area.insert(tk.INSERT, host)
-
-    # with open('log\ping\ping_dns_list.log', 'w') as f:
-    #     for a in valor2:
-    #         f.write('{:.0f}\n'.format((a)))
-    return a, a_sort
-
-def ping_ip(ip, tm, nome):
-    address_ip = ip
-    interval_qt = 0.2
-    name = nome
-
-    host3 = ping(address_ip, count=tm, interval=interval_qt)
-
-    with open('log\ping\ping_{}_result.log', 'w'.format(name)) as f:
-        for a in host3:
-            f.write('{:.0f}'.format((a)))
-
-    valor1 = host3.rtts
-
-    #text_area.insert(tk.INSERT, host1)
-    
-    with open('log\ping\ping_{}_list.log', 'w'.format(name)) as f:
-        for a in valor1:
-            f.write('{:.0f}\n'.format((a)))
-
-
-def matplot(list_s, list2_s,d):
-    Y = list_s
-    X = list2_s
-
-    #plot
-    grafico.scatter(X, Y, s=60, c='red', marker='o')
-
-    #Axes range
-    grafico.xlim(0,40)
-    grafico.ylim(0,d)
-
-    #add title
-    grafico.title('Relatorio PING')
-
-    #add x and y labels 
-    grafico.xlabel('Tempo/Quantidade')
-    grafico.ylabel('Tempo/ms')
-
-    #show plot
-    grafico.show()
-
-
-a, b, d = ping_portal("proxy10.idtbrasilhosted.com", 40)
-
-c = ping_dns(20)
-
-matplot(a, b, d)
+verbose_ping('proxy2.idtbrasilhosted.com')
