@@ -4,9 +4,93 @@ from tkinter import *
 from tkinter import ttk
 import tkinter as tk
 import tkinter.scrolledtext as st
+import time
+import threading
+
+"""FUNÇÕES DO SISTEMA"""
+from  icmplib  import  ping
+import matplotlib.pyplot as plt
+import os
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import time
+
+def sip_alg():
+    os.startfile("program\sip-alg-detector.exe")
+
+def ping_IP(IP, tm, name, local_a):
+    
+    #VARIAVEIS
+    address_portal = IP
+    interval_qt = 0.2
+    nome = name
+    local = local_a
+
+    #SISTEMA
+    host1 = ping(address_portal, count=tm, interval=interval_qt)
+
+    #MANPULANDO SAIDA
+    valor1 = host1.rtts
+    max = host1.max_rtt
+    min = host1.min_rtt
+    
+    d = int('{:.0f}'.format(max+5))
+    e = int('{:.0f}'.format(min-5))
+
+    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
+    saida_y = []
+    for ms in valor1:
+        saida_y.append(int('{:.0f}'.format(ms)))
+
+    saida_x = []
+    tam_s = len(saida_y)
+    x2 = tam_s + 1
+    xx = range(1, x2)
+    for n in xx:
+        saida_x.append(n)
+
+    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
+    text_area.insert(tk.INSERT, host1)
+    
+    #INICIANDO MATPLOT COM DADOS DA SAIDA
+    
+    threading.Thread(target=matplot(name, saida_y, saida_x, e, d, local)).start()
+
+
+def matplot(name, saida_y, saida_x, tam_min, tam_max, local):
+    #name, saida_y, saida_x, tam_min, tam_max = ping_portal()
+
+    text_area.insert(tk.INSERT, 'Montando dados...\n')
+
+    #VARIAVEIS
+    nome = name
+    y = saida_y
+    x = saida_x
+    tamMin = tam_min
+    tamMax = tam_max
+    are = local
+    figura = plt.figure(figsize=(8, 4), dpi=60)
+    a = figura.add_subplot(111)
+
+    #add x and y labels 
+    plt.xlabel('Tempo/Quantidade')
+    plt.ylabel('Tempo/ms')
+
+    #Axes range
+    plt.axis(ymin=tamMin,ymax=tamMax)
+
+    #add title
+    plt.title('Relatorio PING')
+    #plot
+    #grafico.plot(x, y, label=nome, marker='o')
+    a.bar(x, y, label=nome)
+    a.legend()
+
+    canva = FigureCanvasTkAgg(figura, are)
+    canva.get_tk_widget().place(x=1 , y=1, height=375, width=540)
+    canva.draw()
+
+    
+    # grafico.show()
 
 """TELA PRINCIPAL"""
 
@@ -14,9 +98,10 @@ import time
 
 app = tk.Tk()
 
-app.geometry('1024x720+480+170')
+app.geometry('1100x720+480+170')
 app.title('Analise rede VoIP - Net2Phone')
-app.iconbitmap('images/icon/net2phone.ico')
+#app.iconbitmap('path/to/interface/images/icon/net2phone.ico')
+app.tk.call('wm', 'iconphoto', app._w, tk.PhotoImage(file='images/icon/net2phone.png'))
 app.resizable(False, False)
 
 lb_top = ttk.Label(app, 
@@ -36,7 +121,7 @@ lb_top.place(x=330, y=1)
 # Especificações notebook. 
 
 nb = ttk.Notebook(app)
-nb.place(x=5, y=20, height=685, width=1000)
+nb.place(x=5, y=20, height=685, width=1090)
 
 frame1 = ttk.Frame(nb, width=980, height=600)
 frame2 = ttk.Frame(nb, width=980, height=600)
@@ -103,102 +188,7 @@ portais = (["Portal 1", "Portal 2", "Portal 3", "Portal 4", "Portal 5", "Portal 
 
 """===FIM VARIAVEIS INTERFACE==="""
 
-"""FUNÇÕES DO SISTEMA"""
-
-from  icmplib  import  ping
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import threading
-
-def sip_alg():
-    os.startfile("program\sip-alg-detector.exe")
-
-def ping_IP(IP, tm, name, local_a):
-    
-    #VARIAVEIS
-    address_portal = IP
-    interval_qt = 0.1
-    nome = name
-    local = local_a
-
-    #SISTEMA
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    #MANPULANDO SAIDA
-    valor1 = host1.rtts
-    max = host1.max_rtt
-    min = host1.min_rtt
-    
-    d = int('{:.0f}'.format(max+5))
-    e = int('{:.0f}'.format(min-5))
-
-    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
-    saida_y = []
-    for ms in valor1:
-        saida_y.append(int('{:.0f}'.format(ms)))
-
-    saida_x = []
-    tam_s = len(saida_y)
-    x2 = tam_s + 1
-    xx = range(1, x2)
-    for n in xx:
-        saida_x.append(n)
-
-    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
-    text_area.insert(tk.INSERT, host1)
-    
-    #INICIANDO MATPLOT COM DADOS DA SAIDA
-    
-    matplot(name, saida_y, saida_x, e, d, local)
-
-
-def matplot(name, saida_y, saida_x, tam_min, tam_max, local):
-    #name, saida_y, saida_x, tam_min, tam_max = ping_portal()
-
-    text_area.insert(tk.INSERT, 'Montando dados...')
-
-    #VARIAVEIS
-    nome = name
-    y = saida_y
-    x = saida_x
-    tamMin = tam_min
-    tamMax = tam_max
-    are = local
-    figura = plt.figure(figsize=(8, 4), dpi=60)
-    a = figura.add_subplot(111)
-
-    #add x and y labels 
-    plt.xlabel('Tempo/Quantidade')
-    plt.ylabel('Tempo/ms')
-
-    #Axes range
-    plt.axis(ymin=tamMin,ymax=tamMax)
-
-    #add title
-    plt.title('Relatorio PING')
-    #plot
-    #grafico.plot(x, y, label=nome, marker='o')
-    a.bar(x, y, label=nome)
-    a.legend()
-
-    canva = FigureCanvasTkAgg(figura, are)
-    canva.get_tk_widget().place(x=1 , y=1, height=375, width=540)
-    canva.draw()
-
-    
-    # grafico.show()
-
 """FUNÇÕES INTERFACE"""
-
-def popupmsg(msg):
-    popup = tk.Tk()
-    popup.wm_title("!")
-    label = ttk.Label(popup, text=msg, font='ARIAL')
-    label.pack(side="top", fill="x", pady=10)
-    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
-    B1.pack()
-    popup.mainloop()
 
 def op_check1(event): #Essa função armazena os valores var do widget ccb.
     global resp_1, resp_portal
@@ -216,25 +206,43 @@ def op_check2(c): #Essa função armazena os valores var do widget checkbox
     resp5 = bool(len2.get())
     resp6 = bool(len3.get())
     
-    #PING PORTAL
-    if resp_1 in portais and c == "SIM" and resp4 > 0:
-        next(1)
-    #TRACERT
-    if resp1 ==1 and c == "SIM":
-        next(2)
-    #DNS
-    if resp2 == 1 and c == "SIM"  and resp4 > 0:
-        next(3) 
-    #SIP ALG
-    if resp3 == 1 and c == "SIM":
-        next(4)
-    #PING IP GATEWAY
-    if resp5 == True and c == "SIM"  and resp4 > 0:
-        next(5)
-        print(resp5)
-    #PING IP HOST
-    if resp6 == True and c == "SIM" and resp4 > 0:
-        next(6)
+
+        #PING PORTAL
+    try:
+        if resp_1 in portais and c == "SIM" and resp4 > 0:
+            next(1)
+    except:
+        pass
+    try:
+        #TRACERT
+        if resp1 ==1 and c == "SIM":
+            next(2)
+    except:
+        pass
+    try:
+        #DNS
+        if resp2 == 1 and c == "SIM"  and resp4 > 0:
+            next(3) 
+    except:
+        pass
+    try:
+        #SIP ALG
+        if resp3 == 1 and c == "SIM":
+            next(4)
+    except:
+        pass
+    try:
+        #PING IP GATEWAY
+        if resp5 == True and c == "SIM"  and resp4 > 0:
+            next(5)
+    except:
+        pass
+    try:
+        #PING IP HOST
+        if resp6 == True and c == "SIM" and resp4 > 0:
+            next(6)
+    except:
+        pass
     
 def next(num: int): #Essa função execulta os comando, vinculada ao botao execultar. 
     resp_1 = ccb.get()
@@ -243,30 +251,32 @@ def next(num: int): #Essa função execulta os comando, vinculada ao botao execu
     resp6 = len3.get()
 
     if num == 1: 
-        text_area.insert(tk.INSERT, 'Iniciando Ping Portal... \n')
-        time.sleep(3)
-        threading.Thread(target=ping_IP(resp_portal, resp4, resp_1, fra1)).start()
+        text_area.insert(tk.INSERT, 'Iniciando Ping Portal... \n'), app.update, time.sleep(3)
+        a1(resp_portal, resp4, resp_1, fra1)
+        
     if num == 2:
-        text_area.insert(tk.INSERT, 'Iniciando Tracert para portal...')
+        text_area.insert(tk.INSERT, 'Iniciando Tracert para portal...\n')
         time.sleep(3)
         print('tracert não pronto')
     if num == 3:
-        text_area.insert(tk.INSERT, 'Iniciando Ping DNS Google...')
+        text_area.insert(tk.INSERT, 'Iniciando Ping DNS Google...\n')
         time.sleep(3)
         threading.Thread(target=ping_IP('8.8.8.8',resp4 ,'DNS Google', fra2)).start()
     if num == 4:
-        text_area.insert(tk.INSERT, 'Iniciando Sip Alg...')
+        text_area.insert(tk.INSERT, 'Iniciando Sip Alg...\n')
         time.sleep(3)
         threading.Thread(target=sip_alg()).start()
     if num == 5:
-        text_area.insert(tk.INSERT, 'Iniciando Ping Gateway...')
+        text_area.insert(tk.INSERT, 'Iniciando Ping Gateway...\n')
         time.sleep(3)
-        threading.Thread(target=ping_IP(resp6, resp4, 'GATEWAY', fra3)).start()
+        threading.Thread(target=ping_IP(resp5, resp4, 'GATEWAY', fra3)).start()
     if num == 6:
-        text_area.insert(tk.INSERT, 'Iniciando Ping Host...')
+        text_area.insert(tk.INSERT, 'Iniciando Ping Host...\n')
         time.sleep(3)
-        threading.Thread(target=ping_IP(resp5, resp4, 'HOST', fra4)).start()
+        threading.Thread(target=ping_IP(resp6, resp4, 'HOST', fra4)).start()
 
+def a1(resp_portal, resp4, resp_1, fra1):
+            threading.Thread(target=ping_IP(resp_portal, resp4, resp_1, fra1)).start()
     
 def pular_l(r1, c0): #Essa função cria uma label
     lv1 = ttk.Label(frame1)
@@ -288,7 +298,7 @@ ccb.bind("<<ComboboxSelected>>", op_check1)
 
 lb2 = ttk.Label(frame1, text=' - Saída portal')
 
-text_area.place(x=565 , y=10, height=590, width=420)
+text_area.place(x=565 , y=10, height=625, width=500)
 ret1.place(x=10 , y=10, height=200, width=540)
 lb1.grid(row=1, column=0)
 ccb.grid(row=1, column=1)
@@ -303,7 +313,7 @@ pular_l(2,0)
 lb9 = ttk.Label(frame1, text=('• Tempo de execução'), justify=LEFT)
 len1_var = tk.IntVar
 len1 = ttk.Entry(frame1, textvariable=len1_var)
-lb10 = ttk.Label(frame1, text=('Ex. 3800 = 1 hora'))
+lb10 = ttk.Label(frame1, text=('Ex. 6000 = 1 hora'))
 
 lb9.grid(row=3, column=0)
 len1.grid(row=3, column=1)
@@ -362,6 +372,10 @@ bt1.grid(row=9, column=0)
 
 bt1 = ttk.Button(frame1, text='Extrair')
 bt1.grid(row=9, column=1)
+
+# varBarra=DoubleVar
+# pb=ttk.Progressbar(frame1, variable=varBarra, maximum=100)
+# pb.place(x=50, y=200, width=300, height=40)
 
 """FIM ROW 9"""
 

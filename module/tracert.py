@@ -1,15 +1,12 @@
 from icmplib import traceroute
 
 def tracert():
-    hops = traceroute("8.8.8.8")
+    hops = traceroute("proxy2.idtbrasilhosted.com")
 
     # saida(hops)
 
     print(hops)
 
-    new_func(hops)
-
-def new_func(hops):
     print('Distance/TTL    Address    Average round-trip time')
 
     last_distance = 0
@@ -25,3 +22,4 @@ def new_func(hops):
 
 
 
+tracert()
