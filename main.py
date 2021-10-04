@@ -174,7 +174,7 @@ len3_var = StringVar
 len3 = ttk.Entry(frame1, textvariable=len3_var)
 
 ret1.place(x=3 , y=3, height=130, width=550)
-#pular_l(0)
+pular_l(0)
 lb1.grid(row=1, column=0)
 ccb.grid(row=1, column=1)
 lb2.grid(row=1, column=2)
