@@ -3,6 +3,8 @@ from tkinter import *
 import tkinter as tk
 from tkinter import ttk
 import core
+from tkinter.messagebox import showinfo
+
 ########################################################################
 class MyApp(object):
     """"""
@@ -34,7 +36,7 @@ class MyApp(object):
         self.frame2 = ttk.Frame(self.nb1)
         self.frame2.pack(fill="both", expand=True)
 
-        self.frame1 = ttk.LabelFrame(self.frame2, text="MTR", relief=SUNKEN)
+        self.frame1 = ttk.LabelFrame(self.frame2, text="Data-Input", relief=SUNKEN)
         self.frame1.grid(row=0, column=0, padx=5, pady=5)
 
         self.nb1.add(self.frame2, text="Troubleshoot")
@@ -113,7 +115,51 @@ class MyApp(object):
         
         
     #-Widget-Label-2-------------------------------------------------------
+        self.frame3 = ttk.LabelFrame(self.frame2, text="Data-Output", relief=SUNKEN)
+        self.frame3.grid(row=1, column=0, padx=5, pady=5)
 
+        self.nb2 = ttk.Notebook(self.frame3)
+        self.nb2.pack(fill="both", expand=True)
+
+        self.frame4 = ttk.Frame(self.nb2)
+        self.frame4.pack(fill="both", expand=True)
+
+        self.nb2.add(self.frame4, text="MTR-Out_Portal")
+
+        columns = ('#1', '#2', '#3', '#4','#5','#6','#7','#8','#9')
+
+        self.tree = ttk.Treeview(self.frame4, columns=columns, show='headings')
+        self.tree.column('#1', minwidth=0, width=30)
+        self.tree.column('#2', minwidth=0, width=110)
+        self.tree.column('#3', minwidth=0, width=60)
+        self.tree.column('#4', minwidth=0, width=60)
+        self.tree.column('#5', minwidth=0, width=60)
+        self.tree.column('#6', minwidth=0, width=60)
+        self.tree.column('#7', minwidth=0, width=60)
+        self.tree.column('#8', minwidth=0, width=60)
+        self.tree.column('#9', minwidth=0, width=60)
+
+        self.tree.heading('#1', text='Nº')
+        self.tree.heading('#2', text='Host')
+        self.tree.heading('#3', text='Loss%')
+        self.tree.heading('#4', text='Snt')
+        self.tree.heading('#5', text='Recv')
+        self.tree.heading('#6', text='Best')
+        self.tree.heading('#7', text='Avrg')
+        self.tree.heading('#8', text='Worsl')
+        self.tree.heading('#9', text='Last')
+
+        contacts = [['0', '192.168.1.1', '30', '1', '1', '2','10','50','20'], ['1', '192.168.1.1', '30', '1', '1', '2','10','50','20'], ['2', '192.168.1.1', '30', '1', '1', '2','10','50','20']]
+
+        # adding data to the treeview
+        for contact in contacts:
+            self.tree.insert('', tk.END, values=contact)
+
+        self.tree.grid(row=0, column=0, sticky='nsew')
+
+        scrollbar = ttk.Scrollbar(self.frame4, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.grid(row=0, column=1, sticky='ns')
 
     #-Barra-progresso------------------------------------------------------
     def progress_bar(self, status):
@@ -148,10 +194,11 @@ class MyApp(object):
         btn.pack()
         
     #----------------------------------------------------------------------
-    def onCloseOtherFrame(self, otherFrame):
-        """"""
-        otherFrame.destroy()
-        self.show()
+    def show_selected_size():
+        showinfo(
+            title='Result',
+            message="Teste Ok"
+        )
         
     #----------------------------------------------------------------------
     def show(self):

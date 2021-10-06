@@ -1,225 +1,220 @@
-from tkinter import *
-from tkinter import ttk
-import tkinter as tk
-import tkinter.scrolledtext as st
 import time
+from tkinter import *
+import tkinter as tk
+from tkinter import ttk
 import core
-import threading
+from tkinter.messagebox import showinfo
 
-"""TELA PRINCIPAL"""
+########################################################################
+class MyApp(object):
+    """"""
+    #----------------------------------------------------------------------
+    def __init__(self, parent):
+        """Constructor"""
+        self.root = parent
+        self.root.title("Analise rede VoIP - Net2Phone")
+        self.frame = tk.Frame(parent).pack()
 
-#Responsável pela tela principal e resoluções padrão.
-
-app = tk.Tk()
-
-app.geometry('980x720+480+170')
-app.title('Analise rede VoIP - Net2Phone')
-#app.iconbitmap('path/to/images/net2phone.ico')
-app.tk.call('wm', 'iconphoto', app._w, tk.PhotoImage(file='images/net2phone.png'))
-app.resizable(False, False)
-
-lb_top = ttk.Label(app, 
-    text=('TROUBLESHOOT VOIP - github.com/fabiohcsouza/Analise_rede_VoIP'),
-    background="#00008B",
-    foreground="white",
-    anchor=CENTER
-)
-lb_top.place(x=330, y=1)
-
-"""INICIO NOTEBOOK"""
-
-# Especificações notebook. 
-
-nb = ttk.Notebook(app)
-nb.place(x=5, y=20, height=685, width=1090)
-
-frame1 = ttk.Frame(nb, width=980, height=600)
-frame2 = ttk.Frame(nb, width=980, height=600)
-frame3 = ttk.Frame(nb, width=980, height=600)
-frame4 = ttk.Frame(nb, width=980, height=600)
-
-frame1.pack(fill='both', expand=True)
-frame2.pack(fill='both', expand=True)
-frame3.pack(fill='both', expand=True)
-frame4.pack(fill='both', expand=True)
-
-nb.add(frame1, text="Troubleshoot")
-nb.add(frame2, text="Multi-Ping")
-nb.add(frame3, text="Nmap")
-nb.add(frame4, text="Dados")
-
-"""FUNÇÕES INTERFACE"""
-
-def op_check1(event): #Essa função armazena os valores var do widget ccb.
-    global resp_1, resp_portal
-    resp_1 = ccb.get()
-    resp_portal = core.portal_entrada[resp_1]
-    lb2['text'] = "-", resp_portal
-
-    return resp_1, resp_portal
-
-def op_check2(c): #Essa função armazena os valores var do widget checkbox
-    resp1 = valor_check1.get()
-    resp2 = valor_check2.get()
-    resp4 = int(len1.get())
-    resp3 = valor_check3.get()
-    resp5 = bool(len2.get())
-    resp6 = bool(len3.get())
-    
-
-        #PING PORTAL
-    try:
-        if resp_1 in core.portais and c == "SIM" and resp4 > 0:
-            next(1)
-    except:
-        pass
-    try:
-        #TRACERT
-        if resp1 ==1 and c == "SIM":
-            next(2)
-    except:
-        pass
-    try:
-        #DNS
-        if resp2 == 1 and c == "SIM"  and resp4 > 0:
-            next(3) 
-    except:
-        pass
-    try:
-        #SIP ALG
-        if resp3 == 1 and c == "SIM":
-            next(4)
-    except:
-        pass
-    try:
-        #PING IP GATEWAY
-        if resp5 == True and c == "SIM"  and resp4 > 0:
-            next(5)
-    except:
-        pass
-    try:
-        #PING IP HOST
-        if resp6 == True and c == "SIM" and resp4 > 0:
-            next(6)
-    except:
-        pass
-    
-def next(num: int): #Essa função execulta os comando, vinculada ao botao execultar. 
-    resp_1 = ccb.get()
-    resp4 = int(len1.get())
-    resp5 = len2.get()
-    resp6 = len3.get()
-
-    if num == 1: 
-        text_area.insert(tk.INSERT, 'Iniciando Ping Portal... \n'), app.update, time.sleep(3)
-        a1(resp_portal, resp4, resp_1, fra1)
+        # Widget Label superior
+        self.lb1 = ttk.Label(self.frame, text=('TROUBLESHOOT VOIP - github.com/fabiohcsouza/Analise_rede_VoIP'),
+        background="#00008B",
+        foreground="white",
+        anchor=tk.CENTER,
+        padding=5,
+        width=132,
+        )
         
-    if num == 2:
-        text_area.insert(tk.INSERT, 'Iniciando Tracert para portal...\n')
-        time.sleep(3)
-        print('tracert não pronto')
-    if num == 3:
-        text_area.insert(tk.INSERT, 'Iniciando Ping DNS Google...\n')
-        time.sleep(3)
-        threading.Thread(target=core.ping_IP('8.8.8.8',resp4 ,'DNS Google', fra2)).start()
-    if num == 4:
-        text_area.insert(tk.INSERT, 'Iniciando Sip Alg...\n')
-        time.sleep(3)
-        threading.Thread(target=core.sip_alg()).start()
-    if num == 5:
-        text_area.insert(tk.INSERT, 'Iniciando Ping Gateway...\n')
-        time.sleep(3)
-        threading.Thread(target=core.ping_IP(resp5, resp4, 'GATEWAY', fra3)).start()
-    if num == 6:
-        text_area.insert(tk.INSERT, 'Iniciando Ping Host...\n')
-        time.sleep(3)
-        threading.Thread(target=core.ping_IP(resp6, resp4, 'HOST', fra4)).start()
+        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(file='images/net2phone.png'))
 
-def a1(resp_portal, resp4, resp_1, fra1):
-            threading.Thread(target=core.ping_IP(resp_portal, resp4, resp_1, fra1)).start()
-    
-def pular_l(r1): #Essa função cria uma label
-    lv1 = ttk.Label(frame1, text='')
-    lv1.grid(row= r1, column=0)
+        self.lb1.pack(fill="x") #lb superior
 
-"""INICIO ROW 1"""
+    #-Widget-Label----------------------------------------------------------
+        # Widget Notebook
+        self.nb1 = ttk.Notebook(self.frame)
+        self.nb1.pack(fill="both", expand=True, padx=10, pady=10)
 
-ret1 = ttk.Label(frame1, relief='solid') #Linha solida
-ret2 = ttk.Label(frame1, relief='solid') #Linha solida
+        self.frame2 = ttk.Frame(self.nb1)
+        self.frame2.pack(fill="both", expand=True)
 
+        self.frame1 = ttk.LabelFrame(self.frame2, text="Data-Input", relief=SUNKEN)
+        self.frame1.grid(row=0, column=0, padx=5, pady=5)
 
-lb1 = ttk.Label(frame1, text=('• Selecione um portal'), justify=LEFT) #Label frase
+        self.nb1.add(self.frame2, text="Troubleshoot")
 
-# Caixa de seleção 
-cbb_var = tk.Variable
-ccb = ttk.Combobox(frame1, textvariable=cbb_var)
-ccb['values'] = core.portais
-ccb.bind("<<ComboboxSelected>>", op_check1)
+        # Widget lb portal
+        self.lb2 = ttk.Label(self.frame1, text=('Select portal:'),
+        width=20,
+        )
 
-# Label saida Portal
-lb2 = ttk.Label(frame1, text=' - Saída portal') 
+        # Widgt CCB portais
+        self.ccb1_var = tk.Variable
+        self.ccb1 = ttk.Combobox(self.frame1, textvariable=self.ccb1_var, 
+        values=core.portais, 
+        width=17,
+        )
+        self.ccb1.bind("<<ComboboxSelected>>", self.op_check1)
+        
+        # Widget lb output portal
+        self.lb3 = ttk.Label(self.frame1, text="- None",
+        width=30,
+        )
 
-# Label Gateway
-lb4 = ttk.Label(frame1, text="• Informe IP gateway") 
+        # Widget lb gateway
+        self.lb4 = ttk.Label(self.frame1, text="Enter IP gateway:",
+        width=20,
+        )
 
-# Entry IP Gateway
-len2_var = StringVar
-len2 = ttk.Entry(frame1, textvariable=len2_var)
+        # Widget input gateway
+        self.entry1_var = StringVar
+        self.entry1 = ttk.Entry(self.frame1, textvariable=self.entry1_var,
+        width=20,
+        )
 
-# Label host
-lb6 = ttk.Label(frame1, text="- Informe IP host")  
+        # Widget lb host
+        self.lb5 = ttk.Label(self.frame1, text="Enter IP Host:",
+        width=20,
+        )
 
-# Entry IP Host 
-len3_var = StringVar
-len3 = ttk.Entry(frame1, textvariable=len3_var)
+        # Widget input host
+        self.entry2_var = StringVar
+        self.entry2 = ttk.Entry(self.frame1, textvariable=self.entry2_var,
+        width=20,
+        justify=tk.LEFT
+        )
 
-ret1.place(x=3 , y=3, height=130, width=550)
-pular_l(0)
-lb1.grid(row=1, column=0)
-ccb.grid(row=1, column=1)
-lb2.grid(row=1, column=2)
-pular_l(2)
-lb4.grid(row=3, column=0)
-len2.grid(row=3, column=1)
-lb6.grid(row=3, column=2)
-len3.grid(row=3, column=3)
-pular_l(4)
+        # Widget bt start
+        self.handler = lambda: self.progress_bar(True)
+        self.btn1 = ttk.Button(self.frame1, text="Start", 
+        command=self.handler,
+        )
 
-# Botão execultar
-bt1 = ttk.Button(frame1, text='Execultar', command= lambda: op_check2('SIM'))
-bt1.grid(row=5, column=0)
+        # Widget bt Parar
+        self.handler1 = lambda: self.progress_bar(False) 
+        self.btn2 = ttk.Button(self.frame1, text="Stop", 
+        command=self.handler1,
+        )
 
-# Botão Parar
-bt1 = ttk.Button(frame1, text='Extrair')
-bt1.grid(row=5, column=1)
+        self.pb = ttk.Progressbar(self.frame1,
+        orient='horizontal',
+        mode='indeterminate',
+        length=200
+        )
+        
 
-# varBarra=DoubleVar
-# pb=ttk.Progressbar(frame1, variable=varBarra, maximum=100)
-# pb.place(x=50, y=200, width=300, height=40)
+        self.lb2.grid(row=0, column=0, pady=5, padx=5) #lb input portal
+        self.ccb1.grid(row=0, column=1, pady=5, padx=5) #CCB portais
+        self.lb3.grid(row=0, column=2, pady=5, padx=5) #lb output portal
 
-"""INICIO NOTEBOOK 2"""
+        self.lb4.grid(row=1, column=0, pady=5, padx=5) #lb gateway
+        self.entry1.grid(row=1, column=1, pady=5, padx=5) #input gateway
+        self.lb5.grid(row=2, column=0, pady=5, padx=5) #lb host
+        self.entry2.grid(row=2, column=1, pady=5, padx=5) #input host
 
-nb2 = ttk.Notebook(frame1)
-nb2.place(x=10 , y=215, height=420, width=542)
+        self.btn1.grid(row=3, column=0) #bt Start
+        self.btn2.grid(row=3, column=1) #bt Stop
+        
+        
+    #-Widget-Label-2-------------------------------------------------------
+        self.frame3 = ttk.LabelFrame(self.frame2, text="Data-Output", relief=SUNKEN)
+        self.frame3.grid(row=1, column=0, padx=5, pady=5)
 
-fra1 = ttk.Frame(nb2, width=380, height=550)
-fra2 = ttk.Frame(nb2, width=380, height=550)
-fra3 = ttk.Frame(nb2, width=380, height=550)
-fra4 = ttk.Frame(nb2, width=380, height=550)
+        self.nb2 = ttk.Notebook(self.frame3)
+        self.nb2.pack(fill="both", expand=True)
 
-fra1.pack(fill='both', expand=True)
-fra2.pack(fill='both', expand=True)
-fra3.pack(fill='both', expand=True)
-fra4.pack(fill='both', expand=True)
+        self.frame4 = ttk.Frame(self.nb2)
+        self.frame4.pack(fill="both", expand=True)
 
-nb2.add(fra1, text="MTR-Portal")
-nb2.add(fra2, text="MTR-Google")
-nb2.add(fra3, text="MTR")
-nb2.add(fra4, text="Gateway")
+        self.nb2.add(self.frame4, text="MTR-Out_Portal")
 
-"""FIM NOTEBOOK"""
+        columns = ('#1', '#2', '#3', '#4','#5','#6','#7','#8','#9')
 
-text_area = st.ScrolledText(fra1)
-text_area.place(x=565 , y=10, height=625, width=500)
+        self.tree = ttk.Treeview(self.frame4, columns=columns, show='headings')
+        self.tree.column('#1', minwidth=0, width=30)
+        self.tree.column('#2', minwidth=0, width=110)
+        self.tree.column('#3', minwidth=0, width=60)
+        self.tree.column('#4', minwidth=0, width=60)
+        self.tree.column('#5', minwidth=0, width=60)
+        self.tree.column('#6', minwidth=0, width=60)
+        self.tree.column('#7', minwidth=0, width=60)
+        self.tree.column('#8', minwidth=0, width=60)
+        self.tree.column('#9', minwidth=0, width=60)
 
-app.tk.mainloop()
+        self.tree.heading('#1', text='Nº')
+        self.tree.heading('#2', text='Host')
+        self.tree.heading('#3', text='Loss%')
+        self.tree.heading('#4', text='Snt')
+        self.tree.heading('#5', text='Recv')
+        self.tree.heading('#6', text='Best')
+        self.tree.heading('#7', text='Avrg')
+        self.tree.heading('#8', text='Worsl')
+        self.tree.heading('#9', text='Last')
+
+        contacts = [['0', '192.168.1.1', '30', '1', '1', '2','10','50','20'], ['1', '192.168.1.1', '30', '1', '1', '2','10','50','20'], ['2', '192.168.1.1', '30', '1', '1', '2','10','50','20']]
+
+        # adding data to the treeview
+        for contact in contacts:
+            self.tree.insert('', tk.END, values=contact)
+
+        self.tree.grid(row=0, column=0, sticky='nsew')
+
+        scrollbar = ttk.Scrollbar(self.frame4, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.grid(row=0, column=1, sticky='ns')
+
+    #-Barra-progresso------------------------------------------------------
+    def progress_bar(self, status):
+
+        self.pb.grid(row=3, column=2, pady=5, padx=5)
+
+        while True:
+            if status == True:
+                self.btn1['command'] = self.pb.start
+                break
+            elif status == False:
+                self.btn2['command'] = self.pb.stop
+                break
+            else:
+                break
+       
+
+    #-Remover-janela-------------------------------------------------------
+    def hide(self):
+        """"""
+        self.root.withdraw()
+        
+    #----------------------------------------------------------------------
+    def openFrame(self):
+        """"""
+        self.hide()
+        otherFrame = tk.Toplevel()
+        otherFrame.geometry("400x300")
+        otherFrame.title("otherFrame")
+        handler = lambda: self.onCloseOtherFrame(otherFrame)
+        btn = tk.Button(otherFrame, text="Close", command=handler)
+        btn.pack()
+        
+    #----------------------------------------------------------------------
+    def show_selected_size():
+        showinfo(
+            title='Result',
+            message="Teste Ok"
+        )
+        
+    #----------------------------------------------------------------------
+    def show(self):
+        """"""
+        self.root.update()
+        #self.root.deiconify()
+        
+        #----------------------------------------------------------------------
+    def op_check1(self, event):
+        """"""
+        self.resp1 = self.ccb1.get()
+        self.resp_portal = core.portal_entrada[self.resp1]
+        self.lb3['text'] = "- " + self.resp_portal
+#----------------------------------------------------------------------
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.geometry("800x600")
+    app = MyApp(root)
+    root.mainloop()
