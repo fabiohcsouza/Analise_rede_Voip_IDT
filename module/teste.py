@@ -6,43 +6,49 @@ import  json
 from time import sleep
 
 class trace():
-    def __init__(self, dst):
+    def __init__(self, dst, name):
 
-        self.dst = dst
-        self.name = 'P2'
+        # Dicionario
+        self.dados_json = {
+            "name" : [],
+            "host" : [], 
+            "numID" : [],
+            "ipRst": [],
+            "nPing" : [],
+            "vPing": [],
+        }
+        # Add variaveis entrada no dicionario
+        self.dados_json['name'] = (name)
+        self.dados_json['host'] = (dst)
 
-        self.dados_json  =  {
-        "name" : [] ,
-        "host" : [] , 
-        "num" : [] , 
-        "ip" : [] , 
-        } 
-
-        for h in self.dst:
-            a, b = scapy.sr(scapy.IP(dst=h, ttl=(1,30),id=scapy.RandShort())/scapy.TCP(flags=0x2), timeout=10)
-        
-            for snd, rcv  in a:
-                self.dados_json['num'].append('{}'.format(snd.ttl))
-                self.dados_json['ip'].append(rcv.src)
-
-            for nm in self.name:
-                self.dados_json['name'] = (self.name)
-
-            for dst in self.dst:
-                self.dados_json['host'] = (self.dst)
-        for i in self.name:
-            self.Json(i)
+        # Call Tracert
+        self.tracerouter()
     
+    def tracerouter(self):
+        # Valores, variavel
+        name_id = self.dados_json["name"]
+        dst_host = self.dados_json["host"]
 
-    def Json(self, name):
+        # Tracert
+        ans, unans = scapy.sr(scapy.IP(dst=dst_host, ttl=(1,30),id=scapy.RandShort())/scapy.TCP(flags=0x2), timeout=10)
+        
+        for snd,rcv in ans:
+            self.dados_json["numID"].append('{}'.format(snd.ttl))
+            self.dados_json["ipRst"].append(rcv.src)
 
-        json_str = json.dumps(self.dados_json) 
+        self.createJson(name_id)
 
-        with open('data{}.json'.format(name), 'w') as fh:
+    def createJson(self, id):
+
+        json_str = json.dumps(self.dados_json)
+
+        print(json_str)
+
+        with open('data{}.json'.format(id), 'w') as fh:
             fh.write(json_str)
 
-portal_list = ('proxy2.idtbrasilhosted.com' ,'8.8.8.8')
-name_list = ('portal 2', 'dns google')
 
+dst = 'proxy2.idtbrasilhosted.com'
+name = 'portal 2'
 
-trace(portal_list)
+trace(dst, name)

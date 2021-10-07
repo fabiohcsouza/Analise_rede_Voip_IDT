@@ -7,15 +7,9 @@ from icmplib import PID, is_ipv6_address
 
 
 def verbose_ping(address, count=30, interval=1, timeout=2, id=PID):
-    # A payload of 56 bytes is used by default. You can modify it using
-    # the 'payload_size' parameter of your ICMP request.
+    
     print(f'PING {address}: 56 data bytes\n')
-
-    # We detect the socket to use from the specified IP address
-    if is_ipv6_address(address):
-        sock = ICMPv6Socket()
-    else:
-        sock = ICMPv4Socket()
+    sock = ICMPv4Socket()
 
     for sequence in range(count):
         # We create an ICMP request
