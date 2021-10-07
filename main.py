@@ -82,24 +82,23 @@ class MyApp(object):
         justify=tk.LEFT
         )
 
-        # Widget bt start
-        self.handler = lambda: self.progress_bar(True)
-        self.btn1 = ttk.Button(self.frame1, text="Start", 
-        command=self.handler,
-        )
-
-        # Widget bt Parar
-        self.handler1 = lambda: self.progress_bar(False) 
-        self.btn2 = ttk.Button(self.frame1, text="Stop", 
-        command=self.handler1,
-        )
-
         self.pb = ttk.Progressbar(self.frame1,
         orient='horizontal',
         mode='indeterminate',
         length=200
         )
-        
+
+        # Widget bt start
+        self.handler = lambda: self.start_bar()
+        self.btn1 = ttk.Button(self.frame1, text="Start", 
+        command=self.handler
+        )
+
+        # Widget bt Parar
+        self.handler1 = lambda: self.stop_bar()
+        self.btn2 = ttk.Button(self.frame1, text="Stop", 
+        command=self.handler1,
+        )
 
         self.lb2.grid(row=0, column=0, pady=5, padx=5) #lb input portal
         self.ccb1.grid(row=0, column=1, pady=5, padx=5) #CCB portais
@@ -112,7 +111,7 @@ class MyApp(object):
 
         self.btn1.grid(row=3, column=0) #bt Start
         self.btn2.grid(row=3, column=1) #bt Stop
-        
+        self.pb.grid(row=3, column=2, pady=5, padx=5)
         
     #-Widget-Label-2-------------------------------------------------------
         self.frame3 = ttk.LabelFrame(self.frame2, text="Data-Output", relief=SUNKEN)
@@ -161,21 +160,28 @@ class MyApp(object):
         self.tree.configure(yscroll=scrollbar.set)
         scrollbar.grid(row=0, column=1, sticky='ns')
 
+                # bind the select event
+        def item_selected(event):
+                showinfo(title='Information',
+                        message="Exelente")
+
+
+        self.tree.bind('<<TreeviewSelect>>', item_selected)
+
     #-Barra-progresso------------------------------------------------------
     def progress_bar(self, status):
 
-        self.pb.grid(row=3, column=2, pady=5, padx=5)
+        if status == True:
+            self.start_bar()
+        elif status == False:
+            self.stop_bar()
 
-        while True:
-            if status == True:
-                self.btn1['command'] = self.pb.start
-                break
-            elif status == False:
-                self.btn2['command'] = self.pb.stop
-                break
-            else:
-                break
-       
+    def start_bar(self):
+        self.btn1['command'] = self.pb.start
+    
+    def stop_bar(self):
+        self.btn2['command'] = self.pb.stop
+    
 
     #-Remover-janela-------------------------------------------------------
     def hide(self):
