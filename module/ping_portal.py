@@ -1,30 +1,51 @@
-
-from time import sleep
-import time
-from icmplib import ICMPv4Socket, ping
-from icmplib import ICMPLibError, ICMPError, TimeoutExceeded
 import re
 import subprocess
+import  json
+import time
+import pandas as pd
+import multiprocessing
+from time import sleep
+from icmplib import ping
+from icmplib import TimeoutExceeded
 
-ipv4 = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
 
-dados_json = {
-            "name" : [],
-            "host" : [],
-            "ipRst": []
+class mtrTrace():
+    def __init__(self, dst, name, st):
+
+        # Dicionario
+        self.dados_json = {
+            "name" : [], #nome
+            "host" : [], #Host
+            "ipRst": [], #Ip
+            "all_pct": [], #Todos os pct
+            "mtr": [], #Pct enviados
+            "hora": [] #hora
             }
 
-def tracert(ip, name):
-    c=1
-    dados_json['name'] = (name)
-    dados_json['host'] = (ip)
+        # Var manter ping
+        self.st = st
+        self.c = 1
+        # Add variaveis entrada no dicionario
+        self.dados_json['name'] = (name)
+        self.dados_json['host'] = (dst)
+        # Var 
+        self.ip = self.dados_json["host"]
+        self.name_id = self.dados_json["name"]
+        self.datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        # Call Tracert
+        self.tracerouter(self.ip)
+    
 
-    for host in ip:
-        try: 
-            print(f'Rastreando a rota para {ip} com no máximo 30 saltos')
+    def tracerouter(self, ip):
 
+        # Valores, variavel
+        self.ipv4 = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+
+        print(f'Rastreando a rota para {ip} com no máximo 30 saltos')
+
+        try:  
             tracert = subprocess.Popen(
-                    "tracert /d /h 30 " + host,
+                    "tracert /d /h 30 " + ip,
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT)
@@ -32,93 +53,92 @@ def tracert(ip, name):
             lines = tracert.stdout.readlines()
             res = b''.join(lines).decode("utf-8", "ignore")
             
-            result = re.findall(ipv4, res)[1:]
-
-            print(f'{c} {result}')
+            result = re.findall(self.ipv4, res)[1:]
 
             for ip in result:
+                self.dados_json["ipRst"].append(ip)
+                print(self.c ,' - ', ip)
 
-                dados_json["ipRst"].append(ip)
-            c += 1
+                sleep(1)
+                self.c += 1
 
         except subprocess.TimeoutExpired:
             print('***')
 
-    ping_IP(True)
+        self.c = 1
+        print(self.dados_json)
 
-def ping_IP(st):
-    
-    #VARIAVEIS
-    c = 1
-    contacts = {
-        "host1":{
-            "num": [],
-            "host": [], 
-            "loss": [], 
-            "sent": [], 
-            "recv": [], 
-            "avg": [],
-            "best": [],
-            "worst": [],
-            "last": [],
-            "jitter": [],
-            "hora": []
-            }}
-    if st == True:
-        countl=10000
-    else:
-        countl=0
-    
-    print(f'{"N"}   {"Host"}            {"Loss%"}     {"Sent"}     {"Recv"}     {"Avg"}       {"Best"}      {"Worst"}       {"Last:"}      {"Jitter"}       {"Hora":}')
+        self.multiProcess()
 
-    while st == True:
-        for ip in dados_json["ipRst"]:
+    def multiProcess(self):
+        if __name__ == '__main__':
+            self.jobs = []
+            for i in range(len(self.dados_json["ipRst"])):
+                for ip in self.dados_json["ipRst"]:
+                    p = multiprocessing.Process(target=self.ping_IP(ip))
+                    self.jobs.append(p)
+                    p.start()
+                sleep(1)
+
+    def ping_IP(self, ip):
+        count = 10
+        c = 1
+        if self.st == True:
+            count += 1
+        else:
+            count=0
+
+        for sequence in range(count):
+
             try:
-                datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-
                 # Enviamos o pedido
-                request = ping(ip, count=1)
+                request = ping(ip, count=count, timeout=1)
 
-                # Estamos aguardando o recebimento de uma resposta do ICMP
-                #reply = sock.receive(request, timeout)
-
-                # Lançamos uma exceção se for uma mensagem de erro ICMP
-                #reply.raise_for_status()
-
-                # Exibimos algumas informações
-                
+                #Adicionando valores a biblioteca
+                self.dados_json["hora"].append(self.datetime)
+                self.dados_json["all_pct"].append(request.rtts)
 
                 #MANPULANDO SAIDA
-                address_s = request.address
-                min_rtt = float('{:.3f}'.format(request.min_rtt))
-                avg_rtt = float('{:.3f}'.format(request.avg_rtt))
-                max_rtt = float('{:.3f}'.format(request.max_rtt))
-                rtts_1 = request.rtts
-                #rtts = float('{:.0f}'.format(rtts_1[0]))
-                packets_sent = request.packets_sent
-                packets_received = request.packets_received
-                packet_loss = request.packet_loss
-                jitter = request.jitter
-                is_alive = request.is_alive
-                loss = packets_sent * packet_loss
-                
+                num = c #Num
+                sent = request.packets_sent
+                loss = '#0' #len(self.dados_json["all_pct"]) #Media perdas ATUALIZAR
+                recv = len(self.dados_json["all_pct"]) #Pct recebidos
+                avg = request.avg_rtt
+                best = request.min_rtt #Melhor pct
+                worst = request.max_rtt #Pior pct
+                last = '{:.0f}'.format(self.dados_json["all_pct"[0]])
+                jitter = request.jitter #Jitter
+                hora = self.datetime #hora
+
+                #Adicionando valores a biblioteca
+                #self.dados_json["mtr"].append(self.out_ping)
 
                 # Exibimos algumas informações
+                table = [num, ip, loss, sent, recv, avg, best, worst, last, jitter, hora]
+                df2 = pd.DataFrame([table], columns=["N", "Host", "Loss%", "Sent", "Recv", "Avg", "Best", "Worst", "Last", "Jitter", "Hora"])
+                print(df2)
 
-                print(f'{c}   {address_s}          {loss}       {packets_sent}        {packets_received}     {avg_rtt}       {min_rtt}     {max_rtt}       {rtts_1}      {jitter}       {datetime}')
-                sleep(2)
+                sleep(1)
                 c += 1
+
             except TimeoutExceeded:
                 # O tempo limite foi atingido
-                print('  Request timeout for icmp_seq ***')
+                print('***')
 
-            except ICMPError as err:
-                # Uma mensagem de erro ICMP foi recebida
-                print(err)
+        print(self.host1)
 
-            except ICMPLibError:
-                # Todos os outros erros
-                print('  An error has occurred.')
-    print('\nCompleted.')
+        def createJson(self, id):
 
-tracert('8.8.8.8', 'portal 2')
+            json_str = json.dumps(self.dados_json)
+
+            print(json_str)
+
+            with open('data_{}.json'.format(id), 'w') as fh:
+                fh.write(json_str)
+
+dst = '8.8.8.8'
+name = 'portal 2'
+
+mtrTrace(dst, name, True)
+
+
