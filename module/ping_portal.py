@@ -3,49 +3,47 @@ import subprocess
 import  json
 import time
 import pandas as pd
-import multiprocessing
+import os
+from multiprocessing import Process
 from time import sleep
 from icmplib import ping
 from icmplib import TimeoutExceeded
-
+from icmplib import ICMPv4Socket
 
 class mtrTrace():
-    def __init__(self, dst, name, st):
-
+    def start(self, name, dst, st):
+        """"""
         # Dicionario
-        self.dados_json = {
-            "name" : [], #nome
-            "host" : [], #Host
-            "ipRst": [], #Ip
-            "all_pct": [], #Todos os pct
-            "mtr": [], #Pct enviados
-            "hora": [] #hora
+        self.dados = {
+            "name" : name, #nome
+            "host" : dst, #Host
             }
-
-        # Var manter ping
-        self.st = st
-        self.c = 1
-        # Add variaveis entrada no dicionario
-        self.dados_json['name'] = (name)
-        self.dados_json['host'] = (dst)
-        # Var 
-        self.ip = self.dados_json["host"]
-        self.name_id = self.dados_json["name"]
-        self.datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        # Call Tracert
-        self.tracerouter(self.ip)
     
+        self.ping_out = {
+                "name" : name, #nome
+                "host" : dst, #Host
+                "ipRst": [], #Ip
+                "all_pct":[], #Todos os pct
+                "time": [], #hora
+                "mtr": [] #mtr
+                }
+        # Manter ping
+        self.st = st
 
-    def tracerouter(self, ip):
+        self.tracert(self, name, dst)
 
-        # Valores, variavel
-        self.ipv4 = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+    def tracert(self, name, dst):
+        """"""
+        name = name
+        dst = dst
+        c=1
+        ipv4 = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+        host = self.ping_out["ipRst"]
 
-        print(f'Rastreando a rota para {ip} com no máximo 30 saltos')
-
-        try:  
+        print(f'\nRastreando a rota para {dst} com no máximo 30 saltos')
+        try: 
             tracert = subprocess.Popen(
-                    "tracert /d /h 30 " + ip,
+                    "tracert /d /h 30 " + dst,
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT)
@@ -53,92 +51,121 @@ class mtrTrace():
             lines = tracert.stdout.readlines()
             res = b''.join(lines).decode("utf-8", "ignore")
             
-            result = re.findall(self.ipv4, res)[1:]
-
-            for ip in result:
-                self.dados_json["ipRst"].append(ip)
-                print(self.c ,' - ', ip)
-
-                sleep(1)
-                self.c += 1
+            result = re.findall(ipv4, res)[1:]
 
         except subprocess.TimeoutExpired:
             print('***')
 
-        self.c = 1
-        print(self.dados_json)
+        print('\nExibindo resultados.')
+        for ip in result:
+            #Escrever na tela e add a list
+            print(f'{c} - {ip}')
+            c += 1
+        
+        #Adicionando valores a lista
+        print('\nAdicionando valores a lista.')
+        for p in result:
+            self.ping_out["ipRst"].append(p)
+            self.ping_out["all_pct"].append([])
+            self.ping_out["time"].append([])
+            self.ping_out["mtr"].append([])
 
-        self.multiProcess()
+        print(self.ping_out)
+        self.tarefa(self, host)
 
-    def multiProcess(self):
-        if __name__ == '__main__':
-            self.jobs = []
-            for i in range(len(self.dados_json["ipRst"])):
-                for ip in self.dados_json["ipRst"]:
-                    p = multiprocessing.Process(target=self.ping_IP(ip))
-                    self.jobs.append(p)
-                    p.start()
-                sleep(1)
+    def tarefa(self, host):
+        """"""
+        host = host
+        id = 0
+        if __name__=="__main__":
+            processes = []
+            num_processes = os.cpu_count()
 
-    def ping_IP(self, ip):
-        count = 10
+            #Criar processo e designar função
+            for i in range(num_processes):
+                for ip in host:
+                    process = Process(target=self.pingMtr(self, ip, id))
+                    processes.append(process)
+                    id+=1
+            print(processes)
+            #Iniciar processo
+            for process in processes:
+                print(f'\nStart Host {host[id]}')
+                process.start()
+                id+=1
+    
+            #Verificar se os processos terminaram 
+            #Bloquear o processo e finalizar.
+            for process in processes:
+                process.join()
+
+
+    def pingMtr(self, ip, id):
+        """"""
+        #VARIAVEIS
         c = 1
-        if self.st == True:
-            count += 1
-        else:
-            count=0
+        datetime = time.strftime('%H:%M:%S', time.localtime())
+        count = self.st
+        name = self.ping_out["name"]
 
-        for sequence in range(count):
+        print(f'\nDisparando {ip} com 64 bytes de n:\n')
 
+        for s in range(count):   
             try:
                 # Enviamos o pedido
-                request = ping(ip, count=count, timeout=1)
-
+                request = ping(ip, count=3, timeout=1)
                 #Adicionando valores a biblioteca
-                self.dados_json["hora"].append(self.datetime)
-                self.dados_json["all_pct"].append(request.rtts)
+
+                for i in request.rtts:
+                    self.ping_out["all_pct"][id].append(f'{i:.3f}')
+                    sleep(0.3)
+                    self.ping_out["time"][id].append(datetime)
 
                 #MANPULANDO SAIDA
                 num = c #Num
-                sent = request.packets_sent
-                loss = '#0' #len(self.dados_json["all_pct"]) #Media perdas ATUALIZAR
-                recv = len(self.dados_json["all_pct"]) #Pct recebidos
-                avg = request.avg_rtt
-                best = request.min_rtt #Melhor pct
-                worst = request.max_rtt #Pior pct
-                last = '{:.0f}'.format(self.dados_json["all_pct"[0]])
+                sent = len(self.ping_out["all_pct"][id])
+                recv = len(self.ping_out["all_pct"][id]) #Pct recebidos
+                loss = sent%recv #Media perdas ATUALIZAR
+                avg = float('{:.3f}'.format(request.avg_rtt)) #Media pct
+                best = float('{:.3f}'.format(request.min_rtt)) #Melhor pct
+                worst = float('{:.3f}'.format(request.max_rtt)) #Pior pct
+                last = self.ping_out["all_pct"][id][-1:]
                 jitter = request.jitter #Jitter
-                hora = self.datetime #hora
-
-                #Adicionando valores a biblioteca
-                #self.dados_json["mtr"].append(self.out_ping)
+                hora = self.ping_out["time"][id][-1:] #hora
 
                 # Exibimos algumas informações
                 table = [num, ip, loss, sent, recv, avg, best, worst, last, jitter, hora]
                 df2 = pd.DataFrame([table], columns=["N", "Host", "Loss%", "Sent", "Recv", "Avg", "Best", "Worst", "Last", "Jitter", "Hora"])
                 print(df2)
 
-                sleep(1)
+                #Adicionando valores a biblioteca
+                self.ping_out["mtr"][id] = (table)
+
                 c += 1
+                sleep(1)
 
             except TimeoutExceeded:
                 # O tempo limite foi atingido
-                print('***')
+                print('  Request timeout for icmp_seq ***\n')
 
-        print(self.host1)
+        self.createJson(self, name)
 
-        def createJson(self, id):
+        
+    def createJson(self, name):
+        """"""
+        print('\nGravando arquivos no json.')
+        json_str = json.dumps(self.ping_out)
 
-            json_str = json.dumps(self.dados_json)
+        print(self.ping_out)
 
-            print(json_str)
+        with open('log\log_{}.json'.format(name), 'w') as fh:
+            fh.write(f'\n{json_str}')
 
-            with open('data_{}.json'.format(id), 'w') as fh:
-                fh.write(json_str)
+        print('\nCompleted.')
+
+    
 
 dst = '8.8.8.8'
-name = 'portal 2'
+name = 'dns'
 
-mtrTrace(dst, name, True)
-
-
+mtrTrace.start(mtrTrace, name, dst, 30)
