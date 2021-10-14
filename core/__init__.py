@@ -1,11 +1,22 @@
 import os
+import ray
+import re
+import subprocess
 import time
-from  icmplib  import  ping, multiping , traceroute , resolve
+import pandas as pd
+import json
+from  icmplib  import  ping
+from icmplib.exceptions import TimeoutExceeded
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.cbook as cbook
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import threading
-from module import *
 
+from time import sleep
+from module import *
 
 """Dicionario de portais com proxy para uso:"""
 portal_entrada = {
@@ -27,77 +38,201 @@ portal_entrada = {
 portais = (["Portal 1", "Portal 2", "Portal 3", "Portal 4", "Portal 5", "Portal 6", 
                 "Portal 7", "Portal 8", "Portal 9", "Portal 10", "Portal 11", "Portal 12"])
 
+tracert_in = {
+        "name" : (), #nome
+        "host" : (), #Host
+        }
+
+portal_out = {
+        "name" : (), #nome
+        "host" : (), #Host
+        "ipRst": [], #Ip
+        "all_pct":[], #Todos os pct
+        "time": [], #hora
+        "mtr": [] #mtr
+        }
+dns_out = {
+        "name" : (), #nome
+        "host" : (), #Host
+        "ipRst": [], #Ip
+        "all_pct":[], #Todos os pct
+        "time": [], #hora
+        "mtr": [] #mtr
+        }
+host_out = {
+        "name" : (), #nome
+        "host" : (), #Host
+        "ipRst": [], #Ip
+        "all_pct":[], #Todos os pct
+        "time": [], #hora
+        "mtr": [] #mtr
+        }
+gateway_out = {
+        "name" : (), #nome
+        "host" : (), #Host
+        "ipRst": [], #Ip
+        "all_pct":[], #Todos os pct
+        "time": [], #hora
+        "mtr": [] #mtr
+        }
+
 """Variavel global evento seleção de portal"""
 
 """===FIM VARIAVEIS INTERFACE==="""
+ray.init()
 
-def sip_alg():
+@ray.remote
+def ptext(txt: str):
+    datetime = time.strftime('%H:%M:%S', time.localtime())
+    return print(f'\n{datetime}: {txt}')
+
+@ray.remote
+def sip_alg(): 
     os.startfile("program\sip-alg-detector.exe")
+    return True
 
-def ping_IP(IP, tm, name, local_a):
+@ray.remote
+def tracert(name: str, host: str) -> bool:
+    """ Esse codigo recebe um nome e um IP, 
+    para lançar um tracert via os e retornar 
+    o resultado em um dict e retornar True quando finalizado. 
+    """
+    nm = name
+    hst = host
+    lls = (f'{nm}_out')
+    c=1
+    ipv4 = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+
+    txt1 = (f'Rastreando a rota para {hst} com no máximo 30 saltos')
+    ptext(txt1)
+
+    try: 
+        tracert = subprocess.Popen(
+                "tracert /d /h 30 " + hst,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+
+        lines = tracert.stdout.readlines()
+        res = b''.join(lines).decode("utf-8", "ignore")
+        
+        result = re.findall(ipv4, res)[1:]
+
+        txt2 = ('Exibindo resultados.')
+        ptext(txt2)
+
+        for ip in result:
+            #Escrever na tela e add a list
+            txt3 = (f'{c} - {ip}')
+            ptext(txt3)
+            c += 1
+            sleep(1)
+        
+        #Adicionando valores a lista
+        txt4 = ('Adicionando valores a lista.')
+        ptext(txt4)
+
+        for p in result:
+            lls["ipRst"].append(p)
+            lls["all_pct"].append([])
+            lls["time"].append([])
+            lls["mtr"].append([])
+
+        ptext(lls.values)
+
+    except subprocess.TimeoutExpired:
+        print('***')
     
+    return (True)
+
+def pingMtr(name: str, hst: str, qt_pct: int, id: int) -> bool:
+    """ Esse codigo recebe um name, host, quantidade e um numero, 
+    execulta 3 solicitações de ICMP no host e retorna os valores,
+    o ping se mantem com base na quantidade e o ID é o valor no 
+    dict que é localizado pelo nome.
+    """
     #VARIAVEIS
-    address_portal = IP
-    interval_qt = 0.2
-    nome = name
-    local = local_a
+    count = qt_pct
+    nm = name
+    hst = hst
+    p = id
+    datetime = time.strftime('%H:%M:%S', time.localtime())
+    lls = (f'{nm}_out')
+    c = 1
 
-    #SISTEMA
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
+    txt1 = (f'Disparando {count} pct para {hst} com 56 bytes de dados:\n')
+    ptext(txt1)
 
-    #MANPULANDO SAIDA
-    valor1 = host1.rtts
-    max = host1.max_rtt
-    min = host1.min_rtt
+    for s in range(count):   
+        try:
+            # Enviamos o pedido
+            request = ping(hst, count=3, privileged=True, id=c )
+            #Adicionando valores a biblioteca
+
+            for i in request.rtts:
+                lls["all_pct"][id].append(f'{i:.3f}')
+                sleep(1)
+                lls["time"][id].append(datetime)
+
+            #MANPULANDO SAIDA
+            hora = lls["time"][p][-1] #hora
+            num = c #Num
+            sent = len(lls["all_pct"][p])
+            recv = len(lls["all_pct"][p]) #Pct recebidos
+            loss = sent%recv #Media perdas ATUALIZAR
+            avg = float('{:.3f}'.format(request.avg_rtt)) #Media pct
+            best = float('{:.3f}'.format(request.min_rtt)) #Melhor pct
+            worst = float('{:.3f}'.format(request.max_rtt)) #Pior pct
+            lst_out = lls["all_pct"][p][-1]
+            last = lst_out.replace("[]", "")
+            jitter = request.jitter #Jitter
+            
+            # Exibimos algumas informações
+            table = [hora ,num, hst, loss, sent, recv, avg, best, worst, last, jitter]
+            df2 = pd.DataFrame([table], columns=["Hora", "N", "Host", "Loss%", "Sent", "Recv", "Avg", "Best", "Worst", "Last", "Jitter"])
+            print(df2)
+
+            #Adicionando valores a biblioteca
+            lls["mtr"][id] = (table)
+            c += 1
+
+        except TimeoutExceeded:
+            # O tempo limite foi atingido
+            txt2 = ('Request timeout for icmp_seq ***')
+            ptext(txt2)
+        
+        txt3 = ('Completo.')
+        ptext(txt3)
+        
+        return (True)
+
+@ray.remote
+def createJson(name: str) -> bool:
+    """Esse codigo tem que receber um nome
+    e gravar o dict em um json, dados esse
+    que ele vai localizar usando o nome
+    """
+    nm = name
+
+    txt1 = ('Gravando arquivos no json.')
+    ptext(txt1)
+
+    json_str = json.dumps(f'{nm}_out')
+
+    txt2 = (json_str)
+    ptext(txt2)
+
+    with open('log\log_{}.json'.format(nm), 'w') as fh:
+        fh.write(f'\n{json_str}')
+
+    txt3 = ('Completo.')
+    ptext(txt3)
     
-    d = int('{:.0f}'.format(max+5))
-    e = int('{:.0f}'.format(min-5))
+    return (True)
 
-    #AJUSTANDO SAIDA PARA USO NO MATPLOTLIB
-    saida_y = []
-    for ms in valor1:
-        saida_y.append(int('{:.0f}'.format(ms)))
-
-    saida_x = []
-    tam_s = len(saida_y)
-    x2 = tam_s + 1
-    xx = range(1, x2)
-    for n in xx:
-        saida_x.append(n)
-
-    #COLOCANDO SAINDO SISTEMA NO LABLE DE TEXTO
-    text_area.insert(tk.INSERT, host1)
-    
-    #INICIANDO MATPLOT COM DADOS DA SAIDA
-    
-    threading.Thread(target=matplot(name, saida_y, saida_x, e, d, local)).start()
-
-def tracert():
-    hops = traceroute("proxy2.idtbrasilhosted.com")
-
-    # saida(hops)
-
-    print(hops)
-
-    print('Distance/TTL    Address    Average round-trip time')
-
-    last_distance = 0
-
-    for hop in hops:
-        if last_distance + 1 != hop.distance:
-            print('Some gateways are not responding')
-
-    # See the Hop class for details
-        print(f'{hop.distance}    {hop.address}    {hop.avg_rtt} ms')
-
-        last_distance = hop.distance
-
-
-
+@ray.remote
 def matplot(name, saida_y, saida_x, tam_min, tam_max, local):
     #name, saida_y, saida_x, tam_min, tam_max = ping_portal()
-
-    text_area.insert(tk.INSERT, 'Montando dados...\n')
 
     #VARIAVEIS
     nome = name

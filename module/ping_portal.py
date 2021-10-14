@@ -8,7 +8,6 @@ from multiprocessing import Process
 from time import sleep
 from icmplib import ping
 from icmplib import TimeoutExceeded
-from icmplib import ICMPv4Socket
 
 class mtrTrace():
     def start(self, name, dst, st):
@@ -55,6 +54,7 @@ class mtrTrace():
 
         except subprocess.TimeoutExpired:
             print('***')
+            
 
         print('\nExibindo resultados.')
         for ip in result:

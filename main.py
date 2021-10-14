@@ -125,9 +125,11 @@ class MyApp(object):
 
         self.nb2.add(self.frame4, text="MTR-Out_Portal")
 
-        columns = ('#1', '#2', '#3', '#4','#5','#6','#7','#8','#9')
+        columns = ('#0', '#1', '#2', '#3', '#4','#5','#6','#7','#8','#9')
 
         self.tree = ttk.Treeview(self.frame4, columns=columns, show='headings')
+
+        self.tree.column('#0', minwidth=0, width=60)
         self.tree.column('#1', minwidth=0, width=30)
         self.tree.column('#2', minwidth=0, width=110)
         self.tree.column('#3', minwidth=0, width=60)
@@ -138,6 +140,7 @@ class MyApp(object):
         self.tree.column('#8', minwidth=0, width=60)
         self.tree.column('#9', minwidth=0, width=60)
 
+        self.tree.heading('#0', text='Hora')
         self.tree.heading('#1', text='Nº')
         self.tree.heading('#2', text='Host')
         self.tree.heading('#3', text='Loss%')
@@ -148,11 +151,9 @@ class MyApp(object):
         self.tree.heading('#8', text='Worsl')
         self.tree.heading('#9', text='Last')
 
-        contacts = [['0', '192.168.1.1', '30', '1', '1', '2','10','50','20'], ['1', '192.168.1.1', '30', '1', '1', '2','10','50','20'], ['2', '192.168.1.1', '30', '1', '1', '2','10','50','20']]
-
         # adding data to the treeview
-        for contact in contacts:
-            self.tree.insert('', tk.END, values=contact)
+        for d in core.portal_out["mtr"]:
+            self.tree.insert('', tk.END, values=d)
 
         self.tree.grid(row=0, column=0, sticky='nsew')
 
