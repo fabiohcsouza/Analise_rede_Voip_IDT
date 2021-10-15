@@ -13,7 +13,8 @@ class MyApp(object):
         """Constructor"""
         self.root = parent
         self.root.title("Analise rede VoIP - Net2Phone")
-        self.frame = tk.Frame(parent).pack()
+        self.frame = tk.Frame(parent, bg='#fff').pack()
+        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(file='images/net2phone.png'))
 
         # Widget Label superior
         self.lb1 = ttk.Label(self.frame, text=('TROUBLESHOOT VOIP - github.com/fabiohcsouza/Analise_rede_VoIP'),
@@ -23,9 +24,6 @@ class MyApp(object):
         padding=5,
         width=132,
         )
-        
-        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(file='images/net2phone.png'))
-
         self.lb1.pack(fill="x") #lb superior
 
     #-Widget-Label----------------------------------------------------------

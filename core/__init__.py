@@ -145,6 +145,7 @@ def tracert(name: str, host: str) -> bool:
     
     return (True)
 
+@ray.remote
 def pingMtr(name: str, hst: str, qt_pct: int, id: int) -> bool:
     """ Esse codigo recebe um name, host, quantidade e um numero, 
     execulta 3 solicitações de ICMP no host e retorna os valores,
