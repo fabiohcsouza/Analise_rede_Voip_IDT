@@ -1,0 +1,11 @@
+####################################################################
+Name: icmplib
+Version: 3.0.1
+Summary: The power to forge ICMP packets and do ping and traceroute.
+Home-page: https://github.com/ValentinBELYN/icmplib
+####################################################################
+Name: matplotlib
+Version: 3.4.3
+Summary: Python plotting package
+Home-page: https://matplotlib.org
+####################################################################

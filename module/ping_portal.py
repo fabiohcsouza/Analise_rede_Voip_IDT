@@ -1,107 +1,171 @@
-#from module.matplotlib import controle
+import re
+import subprocess
+import  json
+import time
+import pandas as pd
+import os
+from multiprocessing import Process
+from time import sleep
+from icmplib import ping
+from icmplib import TimeoutExceeded
 
-
-
-
-"""FUNÇÕES SISTEMA"""
-
-from  icmplib  import  ping
-import matplotlib.pyplot as grafico
-
-
-def ping_portal(portal, tm):
-    address_portal = portal
-    interval_qt = 0.1
-
-    host1 = ping(address_portal, count=tm, interval=interval_qt)
-
-    # with open('log\ping\ping_portal_result.log', 'w') as f:
-    #     f.write(host1)
-
-    valor1 = host1.rtts
-    # min = host1.min_rtt
-    max = host1.max_rtt
-    a = ['{:.0f}'.format(i) for i in valor1]
-    d = int('{:.0f}'.format(max))
-
-    a_sort = list(range(1,41))
-
-    #text_area.insert(tk.INSERT, host1)
-    print(host1)
-
-    print('Valores ping: {} '.format(a))
-
-    print(a_sort)
-
-    return a, a_sort, d
-
-
-def ping_dns(tm):
-
-    address_portal = "8.8.8.8"
-    interval_qt = 0.2
-
-    host2 = ping(address_portal, count=tm, interval=interval_qt)
-
-    # with open('log\ping\ping_dns_result.log', 'w') as f:
-    #     for a in host2:
-    #         f.write('{:.0f}'.format((a)))
-
-    valor2 = host2.rtts
-    a = ['{:.0f}'.format(i) for i in valor2]
-    a_sort = a.sort()
-
-    #text_area.insert(tk.INSERT, host)
-
-    # with open('log\ping\ping_dns_list.log', 'w') as f:
-    #     for a in valor2:
-    #         f.write('{:.0f}\n'.format((a)))
-    return a, a_sort
-
-def ping_ip(ip, tm, nome):
-    address_ip = ip
-    interval_qt = 0.2
-    name = nome
-
-    host3 = ping(address_ip, count=tm, interval=interval_qt)
-
-    with open('log\ping\ping_{}_result.log', 'w'.format(name)) as f:
-        for a in host3:
-            f.write('{:.0f}'.format((a)))
-
-    valor1 = host3.rtts
-
-    #text_area.insert(tk.INSERT, host1)
+class mtrTrace():
+    def start(self, name, dst, st):
+        """"""
+        # Dicionario
+        self.dados = {
+            "name" : name, #nome
+            "host" : dst, #Host
+            }
     
-    with open('log\ping\ping_{}_list.log', 'w'.format(name)) as f:
-        for a in valor1:
-            f.write('{:.0f}\n'.format((a)))
+        self.ping_out = {
+                "name" : name, #nome
+                "host" : dst, #Host
+                "ipRst": [], #Ip
+                "all_pct":[], #Todos os pct
+                "time": [], #hora
+                "mtr": [] #mtr
+                }
+        # Manter ping
+        self.st = st
+
+        self.tracert(self, name, dst)
+
+    def tracert(self, name, dst):
+        """"""
+        name = name
+        dst = dst
+        c=1
+        ipv4 = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+        host = self.ping_out["ipRst"]
+
+        print(f'\nRastreando a rota para {dst} com no máximo 30 saltos')
+        try: 
+            tracert = subprocess.Popen(
+                    "tracert /d /h 30 " + dst,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT)
+
+            lines = tracert.stdout.readlines()
+            res = b''.join(lines).decode("utf-8", "ignore")
+            
+            result = re.findall(ipv4, res)[1:]
+
+        except subprocess.TimeoutExpired:
+            print('***')
+            
+
+        print('\nExibindo resultados.')
+        for ip in result:
+            #Escrever na tela e add a list
+            print(f'{c} - {ip}')
+            c += 1
+        
+        #Adicionando valores a lista
+        print('\nAdicionando valores a lista.')
+        for p in result:
+            self.ping_out["ipRst"].append(p)
+            self.ping_out["all_pct"].append([])
+            self.ping_out["time"].append([])
+            self.ping_out["mtr"].append([])
+
+        print(self.ping_out)
+        self.tarefa(self, host)
+
+    def tarefa(self, host):
+        """"""
+        host = host
+        id = 0
+        if __name__=="__main__":
+            processes = []
+            num_processes = os.cpu_count()
+
+            #Criar processo e designar função
+            for i in range(num_processes):
+                for ip in host:
+                    process = Process(target=self.pingMtr(self, ip, id))
+                    processes.append(process)
+                    id+=1
+            print(processes)
+            #Iniciar processo
+            for process in processes:
+                print(f'\nStart Host {host[id]}')
+                process.start()
+                id+=1
+    
+            #Verificar se os processos terminaram 
+            #Bloquear o processo e finalizar.
+            for process in processes:
+                process.join()
 
 
-def matplot(list_s, list2_s,d):
-    Y = list_s
-    X = list2_s
+    def pingMtr(self, ip, id):
+        """"""
+        #VARIAVEIS
+        c = 1
+        datetime = time.strftime('%H:%M:%S', time.localtime())
+        count = self.st
+        name = self.ping_out["name"]
 
-    #plot
-    grafico.scatter(X, Y, s=60, c='red', marker='o')
+        print(f'\nDisparando {ip} com 64 bytes de n:\n')
 
-    #Axes range
-    grafico.xlim(0,40)
-    grafico.ylim(0,d)
+        for s in range(count):   
+            try:
+                # Enviamos o pedido
+                request = ping(ip, count=3, timeout=1)
+                #Adicionando valores a biblioteca
 
-    #add title
-    grafico.title('Relatorio PING')
+                for i in request.rtts:
+                    self.ping_out["all_pct"][id].append(f'{i:.3f}')
+                    sleep(0.3)
+                    self.ping_out["time"][id].append(datetime)
 
-    #add x and y labels 
-    grafico.xlabel('Tempo/Quantidade')
-    grafico.ylabel('Tempo/ms')
+                #MANPULANDO SAIDA
+                num = c #Num
+                sent = len(self.ping_out["all_pct"][id])
+                recv = len(self.ping_out["all_pct"][id]) #Pct recebidos
+                loss = sent%recv #Media perdas ATUALIZAR
+                avg = float('{:.3f}'.format(request.avg_rtt)) #Media pct
+                best = float('{:.3f}'.format(request.min_rtt)) #Melhor pct
+                worst = float('{:.3f}'.format(request.max_rtt)) #Pior pct
+                last = self.ping_out["all_pct"][id][-1:]
+                jitter = request.jitter #Jitter
+                hora = self.ping_out["time"][id][-1:] #hora
 
-    #show plot
-    grafico.show()
+                # Exibimos algumas informações
+                table = [num, ip, loss, sent, recv, avg, best, worst, last, jitter, hora]
+                df2 = pd.DataFrame([table], columns=["N", "Host", "Loss%", "Sent", "Recv", "Avg", "Best", "Worst", "Last", "Jitter", "Hora"])
+                print(df2)
 
+                #Adicionando valores a biblioteca
+                self.ping_out["mtr"][id] = (table)
 
-a, b, d = ping_portal("proxy10.idtbrasilhosted.com", 40)
+                c += 1
+                sleep(1)
 
-c = ping_dns(20)
+            except TimeoutExceeded:
+                # O tempo limite foi atingido
+                print('  Request timeout for icmp_seq ***\n')
 
-matplot(a, b, d)
+        self.createJson(self, name)
+
+        
+    def createJson(self, name):
+        """"""
+        print('\nGravando arquivos no json.')
+        json_str = json.dumps(self.ping_out)
+
+        print(self.ping_out)
+
+        with open('log\log_{}.json'.format(name), 'w') as fh:
+            fh.write(f'\n{json_str}')
+
+        print('\nCompleted.')
+
+    
+
+dst = '8.8.8.8'
+name = 'dns'
+
+mtrTrace.start(mtrTrace, name, dst, 30)
